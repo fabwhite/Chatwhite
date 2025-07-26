@@ -1,1 +1,1 @@
-// firebaseConfig avec tes clés Firebase
+// Config Firebase ici

@@ -1,1 +1,1 @@
-console.log('Chat initialisé');
+// Chat Firebase
