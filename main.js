@@ -1,1 +1,1 @@
-// JS Firebase (chat, notifications, mur, admin)
+console.log('Chat initialisé');
