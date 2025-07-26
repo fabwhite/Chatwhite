@@ -21,4 +21,132 @@
       width: 100%;
       margin: 10px 0;
       padding: 10px;
-      borde
+      border-radius: 8px;
+      border: none;
+    }
+    textarea {
+      height: 80px;
+    }
+    #messages div {
+      border: 1px solid white;
+      padding: 10px;
+      margin: 10px 0;
+    }
+    #notification {
+      background: #ff0;
+      color: black;
+      padding: 10px;
+      border-radius: 6px;
+      display: none;
+    }
+    .logo {
+      max-width: 150px;
+      margin-bottom: 20px;
+    }
+  </style>
+
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+    import { getFirestore, collection, addDoc, onSnapshot, serverTimestamp, query, orderBy, where, updateDoc, doc } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyDgsEnCFjdK8zIf9GTWQTkgvtYwF_iDd8o",
+      authDomain: "whiteapp-41c88.firebaseapp.com",
+      projectId: "whiteapp-41c88",
+      storageBucket: "whiteapp-41c88.appspot.com",
+      messagingSenderId: "1079966178037",
+      appId: "1:1079966178037:web:2445ad5d88dc95494803bc"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const db = getFirestore(app);
+
+    let userNumber = "";
+    window.addEventListener("DOMContentLoaded", () => {
+      const chatDiv = document.getElementById("chat");
+      const greeting = document.getElementById("greeting");
+      const messagesDiv = document.getElementById("messages");
+      const notification = document.getElementById("notification");
+
+      document.getElementById("connect-btn").onclick = async () => {
+        const input = document.getElementById("user-number");
+        userNumber = input.value.trim();
+        if (!userNumber) return alert("Entre ton numéro !");
+        greeting.textContent = `Connecté en tant que numéro ${userNumber}`;
+        chatDiv.style.display = "block";
+        input.disabled = true;
+        loadMessages();
+      };
+
+      document.getElementById("send-btn").onclick = async () => {
+        const to = document.getElementById("target-number").value.trim();
+        const content = document.getElementById("message").value.trim();
+        if (!to || !content) return alert("Remplis tous les champs !");
+        await addDoc(collection(db, "messages"), {
+          from: userNumber,
+          to,
+          content,
+          timestamp: serverTimestamp(),
+          reported: false
+        });
+        document.getElementById("message").value = "";
+      };
+
+      function loadMessages() {
+        const q = query(
+          collection(db, "messages"),
+          where("to", "==", userNumber),
+          orderBy("timestamp", "desc")
+        );
+
+        onSnapshot(q, (snapshot) => {
+          messagesDiv.innerHTML = "";
+          snapshot.forEach((docSnap) => {
+            const data = docSnap.data();
+            const msg = document.createElement("div");
+            msg.innerHTML = `<p><strong>De ${data.from} :</strong> ${data.content}</p>`;
+
+            const reportBtn = document.createElement("button");
+            reportBtn.textContent = "Signaler 🚩";
+            reportBtn.onclick = () => reportMessage(docSnap.id);
+            msg.appendChild(reportBtn);
+
+            messagesDiv.appendChild(msg);
+          });
+
+          if (!snapshot.empty) {
+            notification.style.display = "block";
+            setTimeout(() => {
+              notification.style.display = "none";
+            }, 3000);
+          }
+        });
+      }
+
+      async function reportMessage(id) {
+        const ref = doc(db, "messages", id);
+        await updateDoc(ref, { reported: true });
+        alert("Message signalé !");
+      }
+    });
+  </script>
+</head>
+<body>
+  <div class="container">
+    <img src="logo.png" alt="Le White" class="logo" />
+    <h1>💘 Soirée Célibataire - Le White</h1>
+    <p>Entre ton numéro :</p>
+    <input id="user-number" placeholder="Ton numéro (ex: 23)" />
+    <button id="connect-btn">Connexion</button>
+
+    <div id="chat" style="display:none;">
+      <p id="greeting"></p>
+      <input id="target-number" placeholder="Numéro de la personne" />
+      <textarea id="message" placeholder="Ton message..."></textarea>
+      <button id="send-btn">Envoyer 💌</button>
+      <div id="notification">📩 Nouveau message reçu !</div>
+      <div id="messages"></div>
+    </div>
+  </div>
+</body>
+</html>
