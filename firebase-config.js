@@ -1,1 +1,0 @@
-// Config Firebase pour whiteapp-41c88
